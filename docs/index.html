@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes.app Plugin for Claude Code</title>
+  <meta name="description" content="Full CRUD operations for macOS Notes.app from Claude Code. Create, read, update, and delete notes and folders with natural language.">
+  <meta property="og:title" content="Notes.app Plugin for Claude Code">
+  <meta property="og:description" content="Control macOS Notes.app with natural language. Create, read, update, delete notes and folders directly from Claude Code.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jondwillis.github.io/notes-app-plugin/">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Notes.app Plugin for Claude Code",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #222;
+      --text: #e5e5e5;
+      --text-muted: #888;
+      --accent: #f5c542;
+      --accent-dim: #f5c54220;
+      --code-bg: #1a1a1a;
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav .logo {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    nav .links {
+      display: flex;
+      gap: 20px;
+      font-size: 0.875rem;
+    }
+    nav .links a { color: var(--text-muted); }
+    nav .links a:hover { color: var(--text); text-decoration: none; }
+
+    /* HERO */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      margin: 0 auto 32px;
+    }
+    .hero .ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0a0a0a;
+    }
+    .btn-primary:hover { opacity: 0.9; text-decoration: none; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: #444; text-decoration: none; }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 48px 0;
+      overflow: hidden;
+    }
+    .stat {
+      background: var(--surface);
+      padding: 24px;
+      text-align: center;
+    }
+    .stat .number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .stat .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+    }
+    section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    section .section-sub {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    /* FEATURE GRID */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .feature .icon {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    .feature h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .feature p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* OPERATIONS TABLE */
+    .ops-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .ops-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .ops-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ops-table tr:last-child td { border-bottom: none; }
+    .ops-table .op-name { font-weight: 500; }
+    .ops-table .op-example {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .check { color: var(--accent); }
+
+    /* CODE BLOCKS */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 16px 0;
+      position: relative;
+    }
+    .code-block .comment { color: #555; }
+    .code-block .command { color: var(--text); }
+    .code-block .highlight { color: var(--accent); }
+
+    /* USAGE EXAMPLES */
+    .examples {
+      display: grid;
+      gap: 12px;
+    }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .example .prompt {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .example .prompt span { color: var(--accent); }
+    .example .desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* FAQ */
+    .faq-list { display: grid; gap: 16px; }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .faq-item h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .faq-item p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    footer .footer-links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .hero .subtitle { font-size: 1rem; }
+      .stats { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr; }
+      .example { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .example .desc { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="logo">📝 notes-app-plugin</div>
+      <div class="links">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="#usage">Usage</a>
+        <a href="https://github.com/jondwillis/notes-app-plugin">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <h1>Your notes, one prompt away.</h1>
+      <p class="subtitle">Full CRUD for macOS Notes.app from Claude Code. Create, read, update, and delete notes and folders with natural language.</p>
+      <div class="ctas">
+        <a href="#install" class="btn btn-primary">Get started</a>
+        <a href="https://github.com/jondwillis/notes-app-plugin" class="btn btn-secondary">View on GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat">
+        <div class="number">1</div>
+        <div class="label">Command</div>
+      </div>
+      <div class="stat">
+        <div class="number">5</div>
+        <div class="label">Object types</div>
+      </div>
+      <div class="stat">
+        <div class="number">0</div>
+        <div class="label">Config required</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="container">
+      <h2>Everything Notes.app can do, Claude can do.</h2>
+      <p class="section-sub">One <code>/notes</code> command covers every operation exposed by the AppleScript API.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="icon">📄</div>
+          <h3>Notes</h3>
+          <p>Create, read, update, and delete. Search by name, filter by shared or password-protected status. Read as plaintext or HTML.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">📁</div>
+          <h3>Folders</h3>
+          <p>Create and delete folders. List notes within any folder. Organize across multiple accounts.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">☁️</div>
+          <h3>Accounts</h3>
+          <p>List all synced accounts (iCloud, Google, etc.). Browse folders and notes per account. Find your default account.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">📎</div>
+          <h3>Attachments</h3>
+          <p>List and count attachments on any note. View attachment names and metadata. Read-only access.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2>Supported operations</h2>
+      <p class="section-sub">Everything the macOS Notes.app AppleScript API exposes.</p>
+      <table class="ops-table">
+        <thead>
+          <tr>
+            <th>Object</th>
+            <th>Operation</th>
+            <th>Supported</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="op-name">Notes</td><td>Create, Read, Update, Delete, List, Search</td><td class="check">&#10003;</td></tr>
+          <tr><td class="op-name">Folders</td><td>Create, Delete, List</td><td class="check">&#10003;</td></tr>
+          <tr><td class="op-name">Accounts</td><td>List, Default account</td><td class="check">&#10003;</td></tr>
+          <tr><td class="op-name">Attachments</td><td>List, Count</td><td class="check">&#10003;</td></tr>
+          <tr><td class="op-name">Filters</td><td>Shared notes, Password-protected notes</td><td class="check">&#10003;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="container">
+      <h2>Install in 10 seconds.</h2>
+      <p class="section-sub">No npm. No config. No restart.</p>
+
+      <h3 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: 600;">Claude Code</h3>
+      <div class="code-block">
+        <span class="comment"># Add the marketplace and install</span><br>
+        <span class="command">/plugin marketplace add </span><span class="highlight">jondwillis/notes-app-plugin</span><br>
+        <span class="command">/plugin install </span><span class="highlight">notes-app@jondwillis</span>
+      </div>
+
+      <h3 style="font-size: 0.95rem; margin: 24px 0 12px; font-weight: 600;">Or clone directly</h3>
+      <div class="code-block">
+        <span class="command">git clone https://github.com/jondwillis/notes-app-plugin.git</span><br>
+        <span class="command">claude </span><span class="highlight">--plugin-dir</span><span class="command"> ./notes-app-plugin</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="usage">
+    <div class="container">
+      <h2>Just say what you want.</h2>
+      <p class="section-sub">Claude interprets your request and picks the right AppleScript operation.</p>
+      <div class="examples">
+        <div class="example">
+          <div class="prompt"><span>/notes</span> list my notes</div>
+          <div class="desc">List notes</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> create a note called "Meeting Notes" with today's agenda</div>
+          <div class="desc">Create</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> read "Shopping List"</div>
+          <div class="desc">Read</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> update "Shopping List" to add milk and eggs</div>
+          <div class="desc">Update</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> delete "Old Draft"</div>
+          <div class="desc">Delete</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> create a folder called "Work" in my iCloud account</div>
+          <div class="desc">Folders</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> show all shared notes</div>
+          <div class="desc">Filter</div>
+        </div>
+        <div class="example">
+          <div class="prompt"><span>/notes</span> show attachments on "Project Plan"</div>
+          <div class="desc">Attachments</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="container">
+      <h2>FAQ</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3>How does it work under the hood?</h3>
+          <p>The plugin gives Claude a library of AppleScript templates. When you describe what you want, Claude picks the right template, fills in your parameters, and executes it via <code>osascript</code>. No intermediate server or API — it talks directly to Notes.app.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Will it open Notes.app on my screen?</h3>
+          <p>AppleScript commands run in the background. Notes.app doesn't need to be open or visible. macOS will ask for automation permission the first time — grant it in System Settings &gt; Privacy &amp; Security &gt; Automation.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can it read my password-protected notes?</h3>
+          <p>No. macOS blocks AppleScript from accessing the content of password-protected notes. The plugin can detect which notes are protected, but cannot read or modify their content.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What about pins, tags, and smart folders?</h3>
+          <p>These features exist in the Notes.app GUI but are not exposed through the AppleScript API. The plugin covers everything the API supports — which is full CRUD for notes and folders, plus accounts, attachments, and filtering.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Does it work with iCloud and Google accounts?</h3>
+          <p>Yes. The plugin can list all synced accounts and operate on notes/folders in any of them. You can specify which account to target, or let it use your default.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is it safe? Can it accidentally delete my notes?</h3>
+          <p>The plugin instructs Claude to always confirm before any destructive operation (deleting notes or folders). Claude will ask you to approve before executing a delete. The plugin's tool access is scoped to <code>osascript</code> only — it cannot run arbitrary shell commands.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/jondwillis/notes-app-plugin">GitHub</a>
+        <a href="https://github.com/jondwillis/notes-app-plugin/blob/main/LICENSE">MIT License</a>
+        <a href="https://github.com/jondwillis/notes-app-plugin/issues">Issues</a>
+      </div>
+      <p>Built for Claude Code. Made on macOS.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
