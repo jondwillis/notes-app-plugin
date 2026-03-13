@@ -1,0 +1,10 @@
+{
+  "name": "notes-app",
+  "version": "1.0.0",
+  "description": "Full CRUD operations for macOS Notes.app via AppleScript — notes, folders, accounts, and attachments",
+  "author": {
+    "name": "Jon"
+  },
+  "license": "MIT",
+  "keywords": ["notes", "macos", "applescript", "notes-app", "productivity"]
+}
